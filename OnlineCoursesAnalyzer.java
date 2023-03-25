@@ -53,28 +53,153 @@ public class OnlineCoursesAnalyzer {
 
     //2
     public Map<String, Integer> getPtcpCountByInstAndSubject() {
-        return null;
+        Map<String, Integer> PtcpCountByInstAndSubject = new HashMap<>();
+        for (Course course : courses) {
+            String key = course.getInstitution() + "-" + course.getSubject();
+            int count = PtcpCountByInstAndSubject.getOrDefault(key, 0);
+            PtcpCountByInstAndSubject.put(key, count + course.getParticipants());
+        }
+        return PtcpCountByInstAndSubject.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue, LinkedHashMap::new));
     }
 
     //3
     public Map<String, List<List<String>>> getCourseListOfInstructor() {
-        return null;
+            Map<String, List<List<String>>> map = new HashMap<>();
+
+            for (Course course : courses) {
+                String[] instructors = course.getInstructors().split(",");
+                for (String instructor : instructors) {
+                    String key = instructor.trim();
+                    List<List<String>> big = new ArrayList<>();
+
+                    big.add(new ArrayList<>());
+                    big.add(new ArrayList<>());
+
+                        if(map.get(key)==null ){
+                            map.put(key,big);
+                        }
+
+                            if(course.isIndependent()){
+                                if(!map.get(key).get(0).contains(course.getTitle())){
+                                    map.get(key).get(0).add(course.getTitle());
+                                }
+
+                            }else {
+                                if(!map.get(key).get(1).contains(course.getTitle())){
+                                    map.get(key).get(1).add(course.getTitle());
+                                }
+                            }
+
+                }
+            }
+            for (List<List<String>> lists : map.values()) {
+                for (List<String> list : lists) {
+                    Collections.sort(list);
+                }
+            }
+
+            for (String key : map.keySet()) {
+                System.out.println(key+" == "+map.get(key).toString());
+            }
+
+            return map;
+    }
+
+    public static void main(String[] args) {
+
     }
 
     //4
     public List<String> getCourses(int topK, String by) {
-        return null;
+        if (by.equals("hours")) {
+            // 按照总课时（totalhours）属性对课程进行排序
+            Collections.sort(courses, new Comparator<Course>() {
+                @Override
+                public int compare(Course o1, Course o2) {
+                    if (o1.getTotalHours() > o2.getTotalHours()) {
+                        return -1;
+                    } else if (o1.getTotalHours() < o2.getTotalHours()) {
+                        return 1;
+                    } else {
+                        return o1.getTitle().compareTo(o2.getTitle());
+                    }
+                }
+            });
+        } else if (by.equals("participants")) {
+            // 按照参与者数量（Participants）属性对课程进行排序
+            Collections.sort(courses, new Comparator<Course>() {
+                @Override
+                public int compare(Course o1, Course o2) {
+                    if (o1.getParticipants() > o2.getParticipants()) {
+                        return -1;
+                    } else if (o1.getParticipants() < o2.getParticipants()) {
+                        return 1;
+                    } else {
+                        return o1.getTitle().compareTo(o2.getTitle());
+                    }
+                }
+            });
+        }
+        // 将排好序的课程标题存储在一个List<String>中并返回它
+        List<String> result = new ArrayList<>();
+        Set<String> titleSet = new HashSet<>();
+        for (Course course : courses) {
+            if (!titleSet.contains(course.getTitle())) {
+                result.add(course.getTitle());
+                titleSet.add(course.getTitle());
+                if (result.size() == topK) {
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     //5
     public List<String> searchCourses(String courseSubject, double percentAudited, double totalCourseHours) {
-        return null;
+        List<String> CL = new ArrayList<>();
+        for (Course course : courses) {
+            if (course.getSubject().toLowerCase().contains(courseSubject.toLowerCase())
+                    && course.getPercentAudited() >= percentAudited
+                    && course.getTotalHours() <= totalCourseHours) {
+                if (!CL.contains(course.getTitle())) {
+                CL.add(course.getTitle());
+                }
+            }
+        }
+        Collections.sort(CL);
+        return CL;
     }
 
     //6
     public List<String> recommendCourses(int age, int gender, int isBachelorOrHigher) {
+
+        Map<String , List<Double>> ncourses = new HashMap<>();
+        courses.stream().collect(Collectors.groupingBy(Course:: getNumber)).forEach((a,b) -> {
+            double sumage = b.stream().mapToDouble(Course::getMedianAge).sum();
+            double sumpercentMale = b.stream().mapToDouble(Course::getPercentMale).sum();
+            double sumB = b.stream().mapToDouble(Course:: getPercentDegree).sum();
+            double avsumage = sumage/b.size();
+            double avsumpercentMale = sumpercentMale/b.size();
+            double avsumB = sumB/b.size();
+            List<Double> dl = new ArrayList<>();
+            dl.add(avsumage);
+            dl.add(avsumpercentMale);
+            dl.add(avsumB);
+            ncourses.put(a,dl);
+        });
+        System.out.println(ncourses);
+
+        Map<String, Double> ncourses1 = new HashMap<>();
         return null;
+
     }
+
+
 
 }
 
@@ -102,6 +227,10 @@ class Course {
     double percentMale;
     double percentFemale;
     double percentDegree;
+
+    public boolean isIndependent() {
+        return instructors.split(",").length == 1;
+    }
 
     public String getInstitution() {
         return institution;
