@@ -1,9 +1,12 @@
+import com.sun.jdi.event.StepEvent;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  *
@@ -179,6 +182,7 @@ public class OnlineCoursesAnalyzer {
     public List<String> recommendCourses(int age, int gender, int isBachelorOrHigher) {
 
         Map<String , List<Double>> ncourses = new HashMap<>();
+        //算出每个number对应的三个数据并存为map
         courses.stream().collect(Collectors.groupingBy(Course:: getNumber)).forEach((a,b) -> {
             double sumage = b.stream().mapToDouble(Course::getMedianAge).sum();
             double sumpercentMale = b.stream().mapToDouble(Course::getPercentMale).sum();
@@ -194,8 +198,81 @@ public class OnlineCoursesAnalyzer {
         });
         System.out.println(ncourses);
 
+        //算出每个number对应的相似度的值并存为一个map
         Map<String, Double> ncourses1 = new HashMap<>();
-        return null;
+
+        ncourses.forEach((k,v) -> {
+            double simivalue = Math.pow((age - v.get(0)),2)
+                    + Math.pow((gender * 100 - v.get(1)),2)
+                    + Math.pow((isBachelorOrHigher * 100 - v.get(2)),2);
+            ncourses1.put(k, simivalue);
+        });
+        System.out.println(ncourses1);
+
+        //按照每个number的相似度的值从小到大进行排序并存为一个map
+        Map<String,Double> ncourse2 =  ncourses1.entrySet().stream().sorted(Map.Entry.comparingByValue()).collect(
+                Collectors.toMap(
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (oldValue, newValue) -> oldValue,
+                        LinkedHashMap::new));
+        System.out.println(ncourse2);
+
+        //找出每个number对应的最新日期的课程
+        Map<String, Course> ncourse3 = new HashMap<>();
+        for(Course course : courses){
+            if (ncourse3.get(course.getNumber()) == null){
+                ncourse3.put(course.getNumber(),course);
+            }else {
+                if(course.getLaunchDate().after(ncourse3.get(course.getNumber()).getLaunchDate())){
+                    ncourse3.put(course.getNumber(),course);
+                }
+            }
+        }
+
+        //找出每个number对应的最新日期的课程并按照相似度排序
+        List<String> ncourse6 = new ArrayList<>();
+        for (String s : ncourse2.keySet()){
+            if(!ncourse6.contains(ncourse3.get(s).getTitle())){
+                ncourse6.add(ncourse3.get(s).getTitle());
+            }
+            if (ncourse6.size() == 10){
+                break;
+            }
+        }
+        System.out.println(ncourse6);
+
+        return ncourse6;
+        //找出每个number对应的最新日期的课程的title
+//        Map<String, String> ncourse4 = new HashMap<>();
+//        ncourse6.forEach((k,v) -> {
+//            ncourse4.put(k,v.getTitle());
+//        });
+
+        //找出相似度最小的十个number
+//        Map<String, Double> courses10 = ncourse2.entrySet().stream()
+//                .limit(10)
+//                .collect(Collectors.toMap(
+//                        Map.Entry::getKey,
+//                        Map.Entry::getValue,
+//                        (oldValue, newValue) -> oldValue,
+//                        LinkedHashMap::new
+//                ));
+//        System.out.println(courses10);
+
+        //把这十个number对应的title放进list并返回
+//        List<String> recommend = new ArrayList<>();
+//
+//        for (String s : ncourse4.keySet()){
+//            if(!recommend.contains(ncourse4.get(s))){
+//                recommend.add(ncourse4.get(s));
+//            }
+//            if(recommend.size() == 10){
+//                break;
+//            }
+//        }
+//
+//        return recommend;
 
     }
 
