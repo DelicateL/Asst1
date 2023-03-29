@@ -11,7 +11,8 @@ import java.util.stream.Stream;
 
 /**
  *
- * This is just a demo for you, please run it on JDK17 (some statements may be not allowed in lower version).
+ * This is just a demo for you, please run it on JDK17
+ * (some statements may be not allowed in lower version).
  * This is just a demo, and you can extend and implement functions
  * based on this demo, or implement it in a different way.
  */
@@ -35,8 +36,10 @@ public class OnlineCoursesAnalyzer {
                         Double.parseDouble(info[11]),
                         Double.parseDouble(info[12]), Double.parseDouble(info[13]),
                         Double.parseDouble(info[14]),
-                        Double.parseDouble(info[15]), Double.parseDouble(info[16]), Double.parseDouble(info[17]),
-                        Double.parseDouble(info[18]), Double.parseDouble(info[19]), Double.parseDouble(info[20]),
+                        Double.parseDouble(info[15]), Double.parseDouble(info[16]),
+                        Double.parseDouble(info[17]),
+                        Double.parseDouble(info[18]), Double.parseDouble(info[19]),
+                        Double.parseDouble(info[20]),
                         Double.parseDouble(info[21]), Double.parseDouble(info[22]));
                 courses.add(course);
             }
@@ -55,7 +58,7 @@ public class OnlineCoursesAnalyzer {
 
     //1
     public Map<String, Integer> getPtcpCountByInst() {
-        Map<String, Integer> PtcpCountByInst = courses.stream().collect(Collectors.groupingBy(Course::getInstitution,Collectors.summingInt(Course::getParticipants)));
+        Map<String, Integer> PtcpCountByInst = courses.stream().collect(Collectors.groupingBy(Course::getInstitution, Collectors.summingInt(Course::getParticipants)));
         return PtcpCountByInst;
     }
 
