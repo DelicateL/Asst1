@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLOutput;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -119,7 +120,7 @@ public class OnlineCoursesAnalyzer {
     //4
     public List<String> getCourses(int topK, String by) {
         if (by.equals("hours")) {
-            // 按照总课时（totalhours）属性对课程进行排序
+
             Collections.sort(courses, new Comparator<Course>() {
                 @Override
                 public int compare(Course o1, Course o2) {
@@ -133,7 +134,7 @@ public class OnlineCoursesAnalyzer {
                 }
             });
         } else if (by.equals("participants")) {
-            // 按照参与者数量（Participants）属性对课程进行排序
+
             Collections.sort(courses, new Comparator<Course>() {
                 @Override
                 public int compare(Course o1, Course o2) {
@@ -147,7 +148,7 @@ public class OnlineCoursesAnalyzer {
                 }
             });
         }
-        // 将排好序的课程标题存储在一个List<String>中并返回它
+
         List<String> result = new ArrayList<>();
         Set<String> titleSet = new HashSet<>();
         for (Course course : courses) {
@@ -182,43 +183,46 @@ public class OnlineCoursesAnalyzer {
     public List<String> recommendCourses(int age, int gender, int isBachelorOrHigher) {
 
         Map<String , List<Double>> ncourses = new HashMap<>();
-        //算出每个number对应的三个数据并存为map
+
+        //Groupingby the coursenumber
         courses.stream().collect(Collectors.groupingBy(Course:: getNumber)).forEach((a,b) -> {
+
             double sumage = b.stream().mapToDouble(Course::getMedianAge).sum();
             double sumpercentMale = b.stream().mapToDouble(Course::getPercentMale).sum();
             double sumB = b.stream().mapToDouble(Course:: getPercentDegree).sum();
-            double avsumage = sumage/b.size();
-            double avsumpercentMale = sumpercentMale/b.size();
-            double avsumB = sumB/b.size();
+
+            double avsumage = sumage / b.size();
+            double avsumpercentMale = sumpercentMale / b.size();
+            double avsumB = sumB / b.size();
+
             List<Double> dl = new ArrayList<>();
             dl.add(avsumage);
             dl.add(avsumpercentMale);
             dl.add(avsumB);
+
             ncourses.put(a,dl);
         });
-        System.out.println(ncourses);
 
-        //算出每个number对应的相似度的值并存为一个map
+
+        //Calculate the similarityvalues
         Map<String, Double> ncourses1 = new HashMap<>();
 
         ncourses.forEach((k,v) -> {
-            double simivalue = Math.pow((age - v.get(0)),2)
-                    + Math.pow((gender * 100 - v.get(1)),2)
-                    + Math.pow((isBachelorOrHigher * 100 - v.get(2)),2);
+            double simivalue = (age - v.get(0)) * (age - v.get(0))
+                    + (gender * 100 - v.get(1)) * (gender * 100 - v.get(1))
+                    + (isBachelorOrHigher * 100 - v.get(2)) * (isBachelorOrHigher * 100 - v.get(2));
             ncourses1.put(k, simivalue);
         });
-        System.out.println(ncourses1);
 
-        //按照每个number的相似度的值从小到大进行排序并存为一个map
+        //Sort the former map by the similarityvalues
         Map<String,Double> ncourse2 =  ncourses1.entrySet().stream().sorted(Map.Entry.comparingByValue()).collect(
                 Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,
                         (oldValue, newValue) -> oldValue,
                         LinkedHashMap::new));
-        System.out.println(ncourse2);
 
-        //找出每个number对应的最新日期的课程
+        //Linking the numbers to the courses with the latest LanuchDate
         Map<String, Course> ncourse3 = new HashMap<>();
         for(Course course : courses){
             if (ncourse3.get(course.getNumber()) == null){
@@ -229,50 +233,24 @@ public class OnlineCoursesAnalyzer {
                 }
             }
         }
+        //Getting the map<course title of the number, similarityvalue> and sorting it
+        Map<String, Double> map1 = new LinkedHashMap<>();
+        ncourse2.forEach((k,v) -> {
+            map1.putIfAbsent(ncourse3.get(k).getTitle(),v);
+        });
 
-        //找出每个number对应的最新日期的课程并按照相似度排序
+        List<Map.Entry<String, Double>> entries = map1.entrySet().stream()
+                .sorted(Map.Entry.<String, Double>comparingByValue().thenComparing(Map.Entry::getKey)).toList();
+
+        //Fetching the first ten titles
         List<String> ncourse6 = new ArrayList<>();
-        for (String s : ncourse2.keySet()){
-            if(!ncourse6.contains(ncourse3.get(s).getTitle())){
-                ncourse6.add(ncourse3.get(s).getTitle());
-            }
-            if (ncourse6.size() == 10){
+        for(Map.Entry<String, Double> entry : entries) {
+            ncourse6.add(entry.getKey());
+            if(ncourse6.size() == 10){
                 break;
             }
         }
-        System.out.println(ncourse6);
-
         return ncourse6;
-        //找出每个number对应的最新日期的课程的title
-//        Map<String, String> ncourse4 = new HashMap<>();
-//        ncourse6.forEach((k,v) -> {
-//            ncourse4.put(k,v.getTitle());
-//        });
-
-        //找出相似度最小的十个number
-//        Map<String, Double> courses10 = ncourse2.entrySet().stream()
-//                .limit(10)
-//                .collect(Collectors.toMap(
-//                        Map.Entry::getKey,
-//                        Map.Entry::getValue,
-//                        (oldValue, newValue) -> oldValue,
-//                        LinkedHashMap::new
-//                ));
-//        System.out.println(courses10);
-
-        //把这十个number对应的title放进list并返回
-//        List<String> recommend = new ArrayList<>();
-//
-//        for (String s : ncourse4.keySet()){
-//            if(!recommend.contains(ncourse4.get(s))){
-//                recommend.add(ncourse4.get(s));
-//            }
-//            if(recommend.size() == 10){
-//                break;
-//            }
-//        }
-//
-//        return recommend;
 
     }
 
