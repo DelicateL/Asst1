@@ -58,7 +58,11 @@ public class OnlineCoursesAnalyzer {
 
     //1
     public Map<String, Integer> getPtcpCountByInst() {
-        Map<String, Integer> PtcpCountByInst = courses.stream().collect(Collectors.groupingBy(Course::getInstitution, Collectors.summingInt(Course::getParticipants)));
+        Map<String, Integer> PtcpCountByInst =
+                courses.stream().collect(
+                        Collectors.groupingBy(
+                                Course::getInstitution, Collectors.summingInt(
+                                        Course::getParticipants)));
         return PtcpCountByInst;
     }
 
@@ -89,12 +93,12 @@ public class OnlineCoursesAnalyzer {
                     big.add(new ArrayList<>());
                     big.add(new ArrayList<>());
 
-                        if(map.get(key)==null ){
-                            map.put(key,big);
+                        if (map.get(key)==null){
+                            map.put(key, big);
                         }
 
-                            if(course.isIndependent()){
-                                if(!map.get(key).get(0).contains(course.getTitle())){
+                            if (course.isIndependent()){
+                                if (!map.get(key).get(0).contains(course.getTitle())){
                                     map.get(key).get(0).add(course.getTitle());
                                 }
 
