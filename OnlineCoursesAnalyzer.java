@@ -16,7 +16,6 @@ import java.util.stream.Stream;
  * based on this demo, or implement it in a different way.
  */
 public class OnlineCoursesAnalyzer {
-
     List<Course> courses = new ArrayList<>();
 
     public OnlineCoursesAnalyzer(String datasetPath) {
@@ -27,10 +26,15 @@ public class OnlineCoursesAnalyzer {
             br.readLine();
             while ((line = br.readLine()) != null) {
                 String[] info = line.split(",(?=([^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)", -1);
-                Course course = new Course(info[0], info[1], new Date(info[2]), info[3], info[4], info[5],
-                        Integer.parseInt(info[6]), Integer.parseInt(info[7]), Integer.parseInt(info[8]),
-                        Integer.parseInt(info[9]), Integer.parseInt(info[10]), Double.parseDouble(info[11]),
-                        Double.parseDouble(info[12]), Double.parseDouble(info[13]), Double.parseDouble(info[14]),
+                Course course = new Course(info[0], info[1],
+                        new Date(info[2]), info[3],
+                        info[4], info[5],
+                        Integer.parseInt(info[6]), Integer.parseInt(info[7]),
+                        Integer.parseInt(info[8]),
+                        Integer.parseInt(info[9]), Integer.parseInt(info[10]),
+                        Double.parseDouble(info[11]),
+                        Double.parseDouble(info[12]), Double.parseDouble(info[13]),
+                        Double.parseDouble(info[14]),
                         Double.parseDouble(info[15]), Double.parseDouble(info[16]), Double.parseDouble(info[17]),
                         Double.parseDouble(info[18]), Double.parseDouble(info[19]), Double.parseDouble(info[20]),
                         Double.parseDouble(info[21]), Double.parseDouble(info[22]));
@@ -73,7 +77,6 @@ public class OnlineCoursesAnalyzer {
     //3
     public Map<String, List<List<String>>> getCourseListOfInstructor() {
             Map<String, List<List<String>>> map = new HashMap<>();
-
             for (Course course : courses) {
                 String[] instructors = course.getInstructors().split(",");
                 for (String instructor : instructors) {
@@ -246,7 +249,7 @@ public class OnlineCoursesAnalyzer {
         List<String> ncourse6 = new ArrayList<>();
         for(Map.Entry<String, Double> entry : entries) {
             ncourse6.add(entry.getKey());
-            if(ncourse6.size() == 10){
+            if (ncourse6.size() == 10){
                 break;
             }
         }
